@@ -1,13 +1,12 @@
 import argparse
 import os
 
-import openai
 import pandas as pd
 
 from repository import GitRepo
+from openai_utils import OpenAIWrapper
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+MAX_NUM_FILES = 10
 
 def main():
     parser = argparse.ArgumentParser(description='Run Code Explainer on a Git Repo')
@@ -18,30 +17,30 @@ def main():
     repo = GitRepo(args.repo_url)
     repo.clone()
     file_paths = repo.list_files()
+
+    wrapper = OpenAIWrapper()
+
     explanations = []
     index = 0
+
     for file_path in file_paths:
-        print("-"*100)
+
         relative_file_path = os.path.relpath(file_path, repo.repo_path)
-        print(relative_file_path)
         index += 1
-        if index > 10:
+        if index > MAX_NUM_FILES:
+            print("Reached MAX number of files. Exiting ...")
             break
+
+        print("-"*100)
+        print(f"Relative File Path: {relative_file_path}")
+
         with open(file_path, 'r') as fin:
-            data = fin.read()
-        if len(data) > 40000:
+            code_string = fin.read()
+        if len(code_string) > 40000:
             print(f"{file_path} has a character size exceeding limit. Skipping ...")
-        prompt_text = data + "\n\n# Brief Explanation of what the code above does \n#"
-        response = response = openai.Completion.create(
-            model="code-davinci-002",
-            prompt=prompt_text,
-            temperature=0.1,
-            max_tokens=512,
-            top_p=1.0,
-            frequency_penalty=0.3,
-            presence_penalty=0.1
-        )
-        explanation = response.get("choices", [{}])[0].get("text")
+
+        explanation = wrapper.explain_code(code_string)
+
         print("-"*100)
         print(explanation)
 
