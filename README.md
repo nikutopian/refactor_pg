@@ -6,7 +6,7 @@ pip install -r requirements.txt
 ```
 
 ## Description
-Simple code to download a git repository locally, reading all the python files in the repo and then use the OpenAI API for Codex model to get a brief description of the code in each file.
+Simple code to download a git repository locally, read all the python files in the repo and then use the OpenAI API for Codex model to get a brief description or explanation of the code in each file.
 
 ## Usage
 ```
