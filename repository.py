@@ -1,15 +1,22 @@
 import os
 import subprocess
 import re 
-import tempfile
+
+BASE_PATH = os.path.expanduser("~/data/repos/")
 
 class GitRepo:
     def __init__(self, repo_url: str):
+        if not os.path.exists(BASE_PATH):
+            os.makedirs(BASE_PATH)
         self.repo_url = repo_url
-        self.repo_path = os.path.join(tempfile.mkdtemp(), repo_url.split("/")[-1])
+        self.repo_path = os.path.join(BASE_PATH, repo_url.split("/")[-1])
 
     def clone(self):
-        subprocess.run(["git", "clone", self.repo_url, self.repo_path])
+        if os.path.exists(self.repo_path):
+            print("Git repo already cloned locally")
+        else:
+            subprocess.run(["git", "clone", self.repo_url, self.repo_path])
+        print(f"Git repo already cloned at: {self.repo_path}")
 
     def list_files(self, filter=".*\.py$"):
         current_path =  os.getcwd()
