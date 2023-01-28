@@ -69,19 +69,23 @@ def main():
                 custom_print_code(selected_code_func, include_code=True)
                 while True:
                     sub_option = input("""Choose one option below:
-                    1. Provide an explanation of the function
-                    2. Generate unit test for function
-                    3. Refactor function to be more compact
-                    4. Go back to Main Menu\n""").strip()
-                    if sub_option == "4":
+                    1. What would you like to know about this function? Insert a custom prompt.
+                    2. Provide an explanation of the function
+                    3. Generate unit test for function
+                    4. Refactor function to be more compact
+                    5. Go back to Main Menu\n""").strip()
+                    if sub_option == "5":
                         break
                     else:
                         print("-"*100)
                         if sub_option == "1":
-                            print(wrapper.explain_code(selected_code_func["code"]))
+                            custom_prompt = input()
+                            print(wrapper.custom_gpt_call_code(selected_code_func["code"], custom_prompt))
                         elif sub_option == "2":
-                            print(wrapper.generate_unit_test(selected_code_func["code"]))
+                            print(wrapper.explain_code(selected_code_func["code"]))
                         elif sub_option == "3":
+                            print(wrapper.generate_unit_test(selected_code_func["code"]))
+                        elif sub_option == "4":
                             print(wrapper.refactor_function(selected_code_func["code"]))
                         print("-"*100)
 
