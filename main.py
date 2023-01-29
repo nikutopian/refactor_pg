@@ -2,12 +2,19 @@ import argparse
 import os
 from pprint import pprint
 
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import TerminalFormatter
+
 import pandas as pd
 
 from code_embedder import CodeEmbeddingIndexer
 from openai_utils import OpenAIWrapper
 from python_parser import PythonParser
 from repository import GitRepo
+
+def pretty_print(code):
+    print(highlight(code, PythonLexer(), TerminalFormatter()))
 
 def get_repo_url():
     repo_url = input("Enter a git repo http url: ")
@@ -17,7 +24,7 @@ def custom_print_code(code_func, include_code=False):
     print(f"{code_func['filepath']}::{code_func['function_name']}")
     if include_code:
         print("-"*100)
-        print(code_func["code"])
+        pretty_print(code_func["code"])
         print("-"*100)
 
 def main():
@@ -86,7 +93,8 @@ def main():
                         elif sub_option == "3":
                             print(wrapper.generate_unit_test(selected_code_func["code"]))
                         elif sub_option == "4":
-                            print(wrapper.refactor_function(selected_code_func["code"]))
+                            result = wrapper.refactor_function(selected_code_func["code"])
+                            pretty_print(result)
                         print("-"*100)
 
 
