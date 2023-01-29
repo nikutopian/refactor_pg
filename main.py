@@ -6,12 +6,16 @@ from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
 
+from prettytable import PrettyTable, PLAIN_COLUMNS
+
 import pandas as pd
 
 from code_embedder import CodeEmbeddingIndexer
 from openai_utils import OpenAIWrapper
 from python_parser import PythonParser
 from repository import GitRepo
+
+clear_output = lambda: os.system('cls' if os.name=='nt' else 'clear')
 
 def pretty_print(code):
     print(highlight(code, PythonLexer(), TerminalFormatter()))
@@ -49,6 +53,8 @@ def main():
         2. Select a function
         3. Exit\n""").strip()
 
+        clear_output()
+
         if option == "3":
             print("Exiting ...")
             break
@@ -56,9 +62,14 @@ def main():
         if option == "1":
             query = input("Enter a function search query: ")
             code_funcs_neighbors, distances = indexer.search_index(query, 3)
-            for code_funcs_neighbor, distance in zip(code_funcs_neighbors, distances):
-                custom_print_code(code_funcs_neighbor)
-                print(f"Distance metric: {distance}")
+            code_paths = map(lambda c: f"{c['filepath']}::{c['function_name']}", code_funcs_neighbors)
+            table = PrettyTable()
+            table.set_style(PLAIN_COLUMNS)
+            table.field_names = ["Function Path", "Distance Metric"]
+            table.add_rows(zip(code_paths, distances))
+            print("\n"*5)
+            print(table)
+            print("\n"*5)
             print("-"*100)
 
         if option == "2":
