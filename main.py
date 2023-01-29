@@ -1,12 +1,13 @@
 import argparse
 import os
 from pprint import pprint
-
+import tabulate
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
 
 from prettytable import PrettyTable, PLAIN_COLUMNS
+import colorama
 
 import pandas as pd
 
@@ -16,12 +17,16 @@ from python_parser import PythonParser
 from repository import GitRepo
 
 clear_output = lambda: os.system('cls' if os.name=='nt' else 'clear')
+colorama.init(autoreset=True)
+YELLOW = "\x1b[1;33;40m" 
+
 
 def pretty_print(code):
     print(highlight(code, PythonLexer(), TerminalFormatter()))
 
 def get_repo_url():
-    repo_url = input("Enter a git repo http url: ")
+    print(colorama.Fore.LIGHTBLUE_EX+"Enter a git repo http url: ", end='')
+    repo_url = input()
     return repo_url
 
 def custom_print_code(code_func, include_code=False):
@@ -33,25 +38,38 @@ def custom_print_code(code_func, include_code=False):
 
 def main():
 
+    clear_output()
     repo_url = get_repo_url()
     repo = GitRepo(repo_url)
     repo.clone()
 
+    print()
+
     parser = PythonParser(repo.repo_path)
     code_funcs = parser.get_all_functions()
 
+    print()
+
     indexer = CodeEmbeddingIndexer(repo.repo_path, code_funcs)
     indexer.create_index()
+
+    print()
 
     wrapper = OpenAIWrapper()
 
     while True:
         print("-"*100)
 
-        option = input("""Choose one option below:
-        1. Search for functions using natural language
-        2. Select a function
-        3. Exit\n""").strip()
+        input_options = [
+            "Search for functions using natural language",
+            "Select a function by name",
+            "Exit"
+        ]
+
+        for index, opt in enumerate(input_options):
+            print(colorama.Fore.LIGHTGREEN_EX+f"{index+1}. {opt}")
+
+        option = input().strip()
 
         clear_output()
 
@@ -62,7 +80,7 @@ def main():
         if option == "1":
             query = input("Enter a function search query: ")
             code_funcs_neighbors, distances = indexer.search_index(query, 3)
-            code_paths = map(lambda c: f"{c['filepath']}::{c['function_name']}", code_funcs_neighbors)
+            code_paths = map(lambda c: f"{c['relative_filepath']}::{c['function_name']}", code_funcs_neighbors)
             table = PrettyTable()
             table.set_style(PLAIN_COLUMNS)
             table.field_names = ["Function Path", "Distance Metric"]

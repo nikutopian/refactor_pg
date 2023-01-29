@@ -1,3 +1,6 @@
 openai
 pandas
 nmslib
+tabulate
+colorama
+prettytable
