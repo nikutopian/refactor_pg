@@ -57,7 +57,7 @@ class OpenAIWrapper:
         return self.__process_result(response)
 
     def refactor_function(self, code_string):
-        prompt_suffix = "\"\"\"\nRefactor the python function above to be more compact and DRY.\n\"\"\""
+        prompt_suffix = "\"\"\"\nRefactor the python function above to be more modular.\n\"\"\""
         prompt_text = code_string + prompt_suffix
 
         response = openai.Completion.create(

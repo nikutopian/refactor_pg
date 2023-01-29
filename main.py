@@ -90,7 +90,7 @@ def main():
                     1. What would you like to know about this function? Insert a custom prompt.
                     2. Provide an explanation of the function
                     3. Generate unit test for function
-                    4. Refactor function to be more compact
+                    4. Refactor function to be more modular
                     5. Go back to Main Menu\n""").strip()
                     if sub_option == "5":
                         break
