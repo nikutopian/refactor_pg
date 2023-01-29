@@ -2,6 +2,7 @@ import os
 import subprocess
 import re 
 import colorama
+from format_utils import cprint
 
 BASE_PATH = os.path.expanduser("~/data/repos/")
 colorama.init(autoreset=True)
@@ -15,11 +16,11 @@ class GitRepo:
 
     def clone(self):
         if os.path.exists(self.repo_path):
-            print(colorama.Fore.LIGHTBLUE_EX+"Git repo already cloned locally")
+            cprint("Git repo already cloned locally")
         else:
-            print(colorama.Fore.LIGHTBLUE_EX+"Cloning Git repo ...")
+            cprint("Cloning Git repo ...")
             subprocess.run(["git", "clone", self.repo_url, self.repo_path])
-        print(colorama.Fore.LIGHTBLUE_EX+f"Git repo cloned at: {self.repo_path}")
+        cprint(f"Git repo cloned at: {self.repo_path}")
 
     def list_files(self, filter=".*\.py$"):
         current_path =  os.getcwd()

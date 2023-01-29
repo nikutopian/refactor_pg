@@ -1,97 +1,86 @@
-import argparse
-import os
-from pprint import pprint
-import tabulate
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import TerminalFormatter
-
-from prettytable import PrettyTable, PLAIN_COLUMNS
 import colorama
 
-import pandas as pd
-
 from code_embedder import CodeEmbeddingIndexer
+from format_utils import (change_print_color, clear_output, cprint,
+                          custom_print_code, pretty_print, print_table)
 from openai_utils import OpenAIWrapper
 from python_parser import PythonParser
 from repository import GitRepo
 
-clear_output = lambda: os.system('cls' if os.name=='nt' else 'clear')
-colorama.init(autoreset=True)
-YELLOW = "\x1b[1;33;40m" 
-
-
-def pretty_print(code):
-    print(highlight(code, PythonLexer(), TerminalFormatter()))
 
 def get_repo_url():
-    print(colorama.Fore.LIGHTBLUE_EX+"Enter a git repo http url: ", end='')
+    cprint("Enter a git repo http url: ", is_input=True)
     repo_url = input()
     return repo_url
 
-def custom_print_code(code_func, include_code=False):
-    print(f"{code_func['filepath']}::{code_func['function_name']}")
-    if include_code:
-        print("-"*100)
-        pretty_print(code_func["code"])
-        print("-"*100)
+def input_with_options(options):
+    print()
+    print("*"*50)
+    cprint("Choose one option below: ")
+    for index, opt in enumerate(options):
+        cprint(f"{index+1}. {opt}")
+    print("*"*50)
+    print()
+    return input().strip()
+
 
 def main():
-
+    # Get Repo URL, Clone the Repo
     clear_output()
+    change_print_color(colorama.Fore.LIGHTYELLOW_EX)
     repo_url = get_repo_url()
+    print()
+
+    change_print_color(colorama.Fore.LIGHTGREEN_EX)
     repo = GitRepo(repo_url)
     repo.clone()
-
     print()
 
+    # Parse the repo, Parse all python functions
     parser = PythonParser(repo.repo_path)
     code_funcs = parser.get_all_functions()
-
     print()
 
+    # Get Embeddings for all functions
+    # Generate a NN Search Index
+    change_print_color(colorama.Fore.LIGHTGREEN_EX)
     indexer = CodeEmbeddingIndexer(repo.repo_path, code_funcs)
     indexer.create_index()
-
     print()
 
     wrapper = OpenAIWrapper()
 
     while True:
-        print("-"*100)
+        change_print_color(colorama.Fore.LIGHTYELLOW_EX)
 
-        input_options = [
+        option = input_with_options([
             "Search for functions using natural language",
             "Select a function by name",
             "Exit"
-        ]
-
-        for index, opt in enumerate(input_options):
-            print(colorama.Fore.LIGHTGREEN_EX+f"{index+1}. {opt}")
-
-        option = input().strip()
+        ])
 
         clear_output()
 
         if option == "3":
-            print("Exiting ...")
+            cprint("Exiting ...")
             break
 
         if option == "1":
-            query = input("Enter a function search query: ")
+            change_print_color(colorama.Fore.LIGHTYELLOW_EX)
+            cprint("Enter a natural language search query: ", is_input=True)
+            query = input()
+
+            change_print_color(colorama.Fore.LIGHTCYAN_EX)
             code_funcs_neighbors, distances = indexer.search_index(query, 3)
-            code_paths = map(lambda c: f"{c['relative_filepath']}::{c['function_name']}", code_funcs_neighbors)
-            table = PrettyTable()
-            table.set_style(PLAIN_COLUMNS)
-            table.field_names = ["Function Path", "Distance Metric"]
-            table.add_rows(zip(code_paths, distances))
-            print("\n"*5)
-            print(table)
-            print("\n"*5)
-            print("-"*100)
+            table = [[x['relative_filepath'], x['function_name'], y] for x,y in zip(code_funcs_neighbors, distances)]
+            headers = ['relative_filepath', 'function_name', 'embedding_distance']
+            print_table(table, headers)
 
         if option == "2":
-            query = input("Enter a function name: ")
+            change_print_color(colorama.Fore.LIGHTYELLOW_EX)
+            cprint("Enter a function name to search: ", is_input=True)
+            query = input()
+            change_print_color(colorama.Fore.LIGHTCYAN_EX)
             selected_code_func = None
             for code_func in code_funcs:
                 if code_func["function_name"] == query:
@@ -99,28 +88,33 @@ def main():
                     break
             
             if not selected_code_func:
-                print("Could not find a function with that name")
+                cprint("Could not find a function with that name")
             else:
-                print("Found function")
+                cprint("Found function")
                 custom_print_code(selected_code_func, include_code=True)
                 while True:
-                    sub_option = input("""Choose one option below:
-                    1. What would you like to know about this function? Insert a custom prompt.
-                    2. Provide an explanation of the function
-                    3. Generate unit test for function
-                    4. Refactor function to be more modular
-                    5. Go back to Main Menu\n""").strip()
+                    change_print_color(colorama.Fore.LIGHTYELLOW_EX)
+                    sub_option = input_with_options(
+                        [
+                            "What would you like to know about this function? Insert a custom prompt.", 
+                            "Provide an explanation of the function",
+                            "Generate unit test for function",
+                            "Refactor function to be more modular", 
+                            "Go back to Main Menu",
+                        ]
+                    )
+                    change_print_color(colorama.Fore.LIGHTMAGENTA_EX)
                     if sub_option == "5":
                         break
                     else:
                         print("-"*100)
                         if sub_option == "1":
                             custom_prompt = input()
-                            print(wrapper.custom_gpt_call_code(selected_code_func["code"], custom_prompt))
+                            cprint(wrapper.custom_gpt_call_code(selected_code_func["code"], custom_prompt))
                         elif sub_option == "2":
-                            print(wrapper.explain_code(selected_code_func["code"]))
+                            cprint(wrapper.explain_code(selected_code_func["code"]))
                         elif sub_option == "3":
-                            print(wrapper.generate_unit_test(selected_code_func["code"]))
+                            cprint(wrapper.generate_unit_test(selected_code_func["code"]))
                         elif sub_option == "4":
                             result = wrapper.refactor_function(selected_code_func["code"])
                             pretty_print(result)

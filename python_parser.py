@@ -1,14 +1,14 @@
 # Code derived from https://beta.openai.com/docs/guides/embeddings/use-cases
 import os
 from glob import glob
-import colorama
+from format_utils import cprint
 
 class PythonParser():
 
     def __init__(self, code_root):
         self.code_root = code_root
         self.code_files = self.__walk_code_files()
-        print(colorama.Fore.LIGHTYELLOW_EX+"Total number of py files:", len(self.code_files))
+        cprint("Total number of python files: " + str(len(self.code_files)))
 
     def __walk_code_files(self):
         assert self.code_root is not None
@@ -24,7 +24,7 @@ class PythonParser():
             for func in funcs:
                 all_funcs.append(func)
 
-        print(colorama.Fore.LIGHTYELLOW_EX+"Total number of functions extracted:", len(all_funcs))
+        cprint("Total number of python functions extracted: " + str(len(all_funcs)))
 
         return all_funcs
 

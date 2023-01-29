@@ -2,7 +2,7 @@ import os
 
 import openai
 
-MODEL_NAME = "code-davinci-002"
+MODEL_NAME = "text-davinci-003"
 
 class OpenAIWrapper:
     def __init__(self) -> None:
@@ -17,7 +17,7 @@ class OpenAIWrapper:
             model=MODEL_NAME,
             prompt=prompt_text,
             temperature=0.05,
-            max_tokens=256,
+            max_tokens=1024,
             top_p=1.0,
             frequency_penalty=0.2,
             presence_penalty=0.1
@@ -48,7 +48,7 @@ class OpenAIWrapper:
             model=MODEL_NAME,
             prompt=prompt_text,
             temperature=0.05,
-            max_tokens=256,
+            max_tokens=512,
             top_p=1.0,
             frequency_penalty=0.2,
             presence_penalty=0.1
@@ -57,14 +57,14 @@ class OpenAIWrapper:
         return self.__process_result(response)
 
     def refactor_function(self, code_string):
-        prompt_suffix = "\"\"\"\nRefactor the python function above to be more modular.\n\"\"\""
+        prompt_suffix = "\"\"\"\nRefactor the python function above to be more modular with multiple functions.\n\"\"\""
         prompt_text = code_string + prompt_suffix
 
         response = openai.Completion.create(
             model=MODEL_NAME,
             prompt=prompt_text,
             temperature=0.05,
-            max_tokens=256,
+            max_tokens=1024,
             top_p=1.0,
             frequency_penalty=0.2,
             presence_penalty=0.1
